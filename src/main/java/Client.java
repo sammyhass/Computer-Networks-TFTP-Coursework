@@ -31,6 +31,13 @@ public class Client implements IClient {
 	}
 
 	@Override
+	// sendFile to TFTP Server
+	// first sends WRQ req to server
+	// waits for ACK
+	// split file into 512 byte chunks
+	// send each chunk to server
+	// wait for ACK
+	// repeat until all chunks sent
 	public boolean sendFile(String filename) {
 		// Read file as byte array
 		byte[] file = null;
@@ -59,7 +66,9 @@ public class Client implements IClient {
 		}
 
 		// Wait till we receive ACK
+		buffer = new byte[TFTPRequestBuilder.MAX_BYTES];
 		DatagramPacket ackPacket = new DatagramPacket(buffer, TFTPRequestBuilder.MAX_BYTES);
+
 		try {
 			socket.receive(ackPacket);
 		} catch (IOException e) {
