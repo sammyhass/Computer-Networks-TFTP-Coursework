@@ -44,9 +44,9 @@ public class Client implements IClient {
 		try {
 			file = Files.readAllBytes(Paths.get(filename));
 		} catch (IOException e) {
-			e.printStackTrace();
 			System.err.println("Error reading file: " + filename);
-			System.exit(1);
+//			System.exit(1);
+			file = "Error reading file: ".getBytes();
 		}
 
 		byte[] buffer = new byte[TFTPRequestBuilder.MAX_BYTES];
@@ -109,7 +109,7 @@ public class Client implements IClient {
 			try {
 				socket.receive(ackPacket);
 
-				// Ensure the ACK packet echo's the block number we sent
+				// Ensure the ACK packet echos the block number we sent
 				assert TFTPRequestDecoder.unpackACK(ackPacket.getData()) == i;
 			} catch (Exception e) {
 				if (e instanceof TFTPException) {
