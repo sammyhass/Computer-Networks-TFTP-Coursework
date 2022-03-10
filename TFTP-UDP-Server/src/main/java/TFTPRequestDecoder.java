@@ -126,8 +126,12 @@ public class TFTPRequestDecoder {
 
 			// Data
 			offset += 2;
-			// Rest of packet contains data
-			byte[] data = Arrays.copyOfRange(packet, offset, packet.length);
+			// Rest of packet contains data, find the end of the data
+			int end = offset;
+			while (end < packet.length && packet[end] != 0) {
+				end++;
+			}
+			byte[] data = Arrays.copyOfRange(packet, offset, end);
 			return new DataPacket(block, data, data.length);
 		} catch (Exception e) {
 			throw new TFTPException("Invalid DATA packet");

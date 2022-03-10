@@ -108,8 +108,8 @@ public class TFTPServer {
 		TFTPRequestDecoder.DataPacket dataPacket = TFTPRequestDecoder.unpackData(packet.getData(), 0);
 		dataPacketsBuilder.addDataPacket(dataPacket);
 		if (dataPacket.size < TFTPRequestBuilder.MAX_BYTES) {
-				System.out.println("Received last packet");
-				// If it is the last packet, we should write the file
+			// If it is the last packet, we should write the file
+			System.out.println("Received last packet");
 			try {
 				dataPacketsBuilder.save();
 			} catch (Exception e) {
@@ -117,7 +117,6 @@ public class TFTPServer {
 				e.printStackTrace();
 			}
 		}
-
 
 
 		// Send ACK back

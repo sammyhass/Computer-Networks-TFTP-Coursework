@@ -3,6 +3,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
+// Build up data packets for a given file
+// and save them to a file
 public class DataPacketsBuilder {
 	private static final int MAX_NUM_OF_PACKETS = 1024;
 
@@ -33,9 +35,6 @@ public class DataPacketsBuilder {
 	public boolean save() throws IOException {
 		FileOutputStream fos = new FileOutputStream(new File(filename));
 		for (int i = 0; i < size; i++) {
-			if (data[i] == 0) {
-				break;
-			}
 			fos.write(data[i]);
 		}
 
