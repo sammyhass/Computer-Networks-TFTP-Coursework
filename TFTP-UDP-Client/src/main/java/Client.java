@@ -126,7 +126,7 @@ public class Client implements IClient {
 	}
 
 	@Override
-	public boolean receiveFile(String filename) {
+	public boolean retrieveFile(String filename) {
 		return false;
 	}
 }

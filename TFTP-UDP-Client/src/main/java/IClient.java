@@ -12,5 +12,5 @@ public interface IClient {
 	// @param server the server to receive from
 	// @param port the port to receive from
 	// @return true if the file was received successfully, false otherwise
-	 boolean receiveFile(String filename);
+	 boolean retrieveFile(String filename);
 }

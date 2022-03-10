@@ -52,7 +52,7 @@ public class Cmd {
 	}
 
 	private void doDownload(String filename) {
-		client.receiveFile(filename);
+		client.retrieveFile(filename);
 	}
 
 	public static String help() {
