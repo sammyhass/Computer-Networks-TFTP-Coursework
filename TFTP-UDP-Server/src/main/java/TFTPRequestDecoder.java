@@ -1,12 +1,32 @@
-import javafx.util.Pair;
-
 import java.util.Arrays;
-import java.util.stream.Stream;
 
 // We use this class to ensure that responses from the server are
 // correctly formatted. For example, ACK packets must be received prior to sending
 // the first data packet.
 public class TFTPRequestDecoder {
+
+	public static class WrqOrRrqPacket {
+		public final String filename;
+		public final TFTPRequestBuilder.OPCODE opcode;
+
+		public WrqOrRrqPacket(String filename, TFTPRequestBuilder.OPCODE op) {
+			this.filename = filename;
+			this.opcode = op;
+		}
+
+	}
+	
+	public static class DataPacket {
+		public final int blockNumber;
+		public final int size;
+		public final byte[] data;
+
+		public DataPacket(int blockNumber, byte[] data, int size) {
+			this.blockNumber = blockNumber;
+			this.data = data;
+			this.size = size;
+		}
+	}
 
 	// ACK packet
 	//
@@ -46,7 +66,7 @@ public class TFTPRequestDecoder {
 	// | Opcode |  Filename  |   0  |    Mode    |   0  |
 	// ---------------------------------------------------
 	// Returns the filename and mode or throws an exception if the packet is invalid.
-	public static Pair<TFTPRequestBuilder.OPCODE, String> unpackWRQorRRQ(byte[] packet, int offset) throws TFTPException {
+	public static WrqOrRrqPacket unpackWRQorRRQ(byte[] packet, int offset) throws TFTPException {
 		try {
 			// Check opcode
 			int op = unpackUint16(packet, offset);
@@ -60,7 +80,7 @@ public class TFTPRequestDecoder {
 			offset += filename.length() + 1;
 			String mode = unpackString(packet, offset);
 
-			return new Pair<>(TFTPRequestBuilder.OPCODE.values()[op], filename);
+			return new WrqOrRrqPacket(filename, TFTPRequestBuilder.OPCODE.values()[op]);
 		} catch (Exception e) {
 			throw new TFTPException("Invalid WRQ/RRQ packet");
 		}
@@ -81,5 +101,39 @@ public class TFTPRequestDecoder {
 		int hi = packet[offset] & 0xFF;
 		int lo = packet[offset + 1] & 0xFF;
 		return (hi << 8) | lo;
+	}
+
+	//  DATA packet
+	//  2 bytes    2 bytes     n bytes
+	// ----------------------------------
+	// | Opcode |   Block #  |   Data   |
+	// ----------------------------------
+	// packData returns the length of the packet and fills the buffer with the packet
+	// opcode = DATA
+	public static DataPacket unpackData(byte[] packet, int offset) throws TFTPException {
+
+
+		try {
+			// Check opcode
+			int op = unpackUint16(packet, offset);
+			if (op != TFTPRequestBuilder.OPCODE.DATA.getValue()) {
+				throw new TFTPException("Invalid DATA packet");
+			}
+			offset += 2;
+			// Block number
+			int block = unpackUint16(packet, offset);
+			System.out.println("Block number: " + block);
+
+			// Data
+			offset += 2;
+			// Rest of packet contains data
+			byte[] data = Arrays.copyOfRange(packet, offset, packet.length);
+			return new DataPacket(block, data, data.length);
+		} catch (Exception e) {
+			throw new TFTPException("Invalid DATA packet");
+		}
+
+
+
 	}
 }

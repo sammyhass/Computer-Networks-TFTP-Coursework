@@ -1,8 +1,5 @@
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.Socket;
+import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -46,7 +43,7 @@ public class Client implements IClient {
 		} catch (IOException e) {
 			System.err.println("Error reading file: " + filename);
 //			System.exit(1);
-			file = "Error reading file: ".getBytes();
+			file = "Helllooooo".getBytes();
 		}
 
 		byte[] buffer = new byte[TFTPRequestBuilder.MAX_BYTES];
@@ -66,33 +63,48 @@ public class Client implements IClient {
 		}
 
 		// Wait till we receive ACK
+		// clear buffer
 		buffer = new byte[TFTPRequestBuilder.MAX_BYTES];
-		DatagramPacket ackPacket = new DatagramPacket(buffer, TFTPRequestBuilder.MAX_BYTES);
+
+		boolean hasReceivedACK = false;
 
 		try {
-			socket.receive(ackPacket);
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.err.println("Error receiving ACK packet");
-			System.exit(1);
+			socket.setSoTimeout(2000);
+		} catch (SocketException e) {
+			System.err.println("Error setting socket timeout");
+			return false;
 		}
 
-		// Parse the ACK packet
-		try {
-			TFTPRequestDecoder.unpackACK(ackPacket.getData());
-		} catch (TFTPException e) {
-			e.printStackTrace();
-			System.err.println("Error parsing ACK packet");
-			System.exit(1);
+		DatagramPacket ackPacket = new DatagramPacket(buffer, TFTPRequestBuilder.MAX_BYTES, host, port);
+		while (!hasReceivedACK) {
+			try {
+				socket.receive(ackPacket);
+			} catch (IOException e) {
+				System.err.println("Error receiving ACK packet. Retrying...");
+				continue;
+			}
+
+			try {
+				int n = TFTPRequestDecoder.unpackACK(ackPacket.getData());
+				hasReceivedACK = true;
+			} catch (TFTPException e) {
+				continue;
+			}
+			System.out.println("Received ACK, sending data...");
 		}
 
 
 		// Split file into packets
 		int numPackets = (int) Math.ceil((double) file.length / TFTPRequestBuilder.MAX_BYTES);
 
-		for (int i = 0; i < numPackets; i++) {
+		for (int i = 1; i <= numPackets; i++) {
+			// clear buffer
+			buffer = new byte[TFTPRequestBuilder.MAX_BYTES];
+
 			// Build DATA packet
 			int dataReqSize = TFTPRequestBuilder.packData(buffer, i, file);
+
+			System.out.println("Sending packet " + i + " of " + numPackets);
 
 			DatagramPacket dataPacket = new DatagramPacket(buffer, dataReqSize, host, port);
 
@@ -119,14 +131,18 @@ public class Client implements IClient {
 				System.exit(1);
 			}
 
+			System.out.println("Sent packet " + i);
+
 		}
+
+		System.out.println("File sent successfully");
 
 
 		return true;
 	}
 
 	@Override
-	public boolean retrieveFile(String filename) {
+	public boolean getFile(String filename) {
 		return false;
 	}
 }

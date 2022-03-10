@@ -74,7 +74,6 @@ public class TFTPRequestBuilder {
 		for (int i = 0; i < data.length; i++) {
 			buf[length++] = data[i];
 		}
-
 		return length;
 	}
 

@@ -1,5 +1,3 @@
-import javafx.util.Pair;
-
 import java.util.Arrays;
 import java.util.stream.Stream;
 
@@ -7,6 +5,17 @@ import java.util.stream.Stream;
 // correctly formatted. For example, ACK packets must be received prior to sending
 // the first data packet.
 public class TFTPRequestDecoder {
+
+	public static class WrqOrRrq {
+		public final String filename;
+		public final String mode;
+
+		public WrqOrRrq(String filename, String mode) {
+			this.filename = filename;
+			this.mode = mode;
+		}
+
+	}
 
 	// ACK packet
 	//
@@ -20,7 +29,9 @@ public class TFTPRequestDecoder {
 		try {
 			int offset = 0;
 			int op = unpackUint16(packet, offset);
-			assert op == TFTPRequestBuilder.OPCODE.ACK.getValue();
+			if (op != TFTPRequestBuilder.OPCODE.ACK.getValue()) {
+				throw new TFTPException("Invalid ACK packet");
+			}
 
 			offset += 2;
 			return unpackUint16(packet, offset);
@@ -46,7 +57,7 @@ public class TFTPRequestDecoder {
 	// | Opcode |  Filename  |   0  |    Mode    |   0  |
 	// ---------------------------------------------------
 	// Returns the filename and mode or throws an exception if the packet is invalid.
-	public static Pair<TFTPRequestBuilder.OPCODE, String> unpackWRQorRRQ(byte[] packet, int offset) throws TFTPException {
+	public static WrqOrRrq unpackWRQorRRQ(byte[] packet, int offset) throws TFTPException {
 		try {
 			// Check opcode
 			int op = unpackUint16(packet, offset);
@@ -60,7 +71,7 @@ public class TFTPRequestDecoder {
 			offset += filename.length() + 1;
 			String mode = unpackString(packet, offset);
 
-			return new Pair<>(TFTPRequestBuilder.OPCODE.values()[op], filename);
+			return new WrqOrRrq(filename, mode);
 		} catch (Exception e) {
 			throw new TFTPException("Invalid WRQ/RRQ packet");
 		}

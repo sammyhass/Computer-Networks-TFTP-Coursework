@@ -9,8 +9,6 @@ public interface IClient {
 	 boolean sendFile(String filename);
 
 	// Receives a file from the server.
-	// @param server the server to receive from
-	// @param port the port to receive from
 	// @return true if the file was received successfully, false otherwise
-	 boolean retrieveFile(String filename);
+	 boolean getFile(String filename);
 }

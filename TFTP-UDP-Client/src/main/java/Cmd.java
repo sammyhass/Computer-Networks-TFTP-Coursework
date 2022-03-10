@@ -1,4 +1,3 @@
-import javafx.util.Pair;
 
 import java.util.Scanner;
 
@@ -21,8 +20,8 @@ public class Cmd {
 		while (true) {
 			// Parse the command into a command and filename or print the help message if the command is invalid
 			System.out.print("Enter command: ");
-			Pair<Command, String> command = parseCommand(scanner.nextLine());
-			doCommand(command.getKey(), command.getValue());
+			CmdPair cmdPair = parseCommand(scanner.nextLine());
+			doCommand(cmdPair.getCmd(), cmdPair.getFilename());
 		}
 	}
 
@@ -41,7 +40,7 @@ public class Cmd {
 			System.exit(0);
 			break;
 		default:
-			System.out.println("Invalid command");
+			System.err.println("Invalid command");
 			System.out.println(help());
 			break;
 		}
@@ -52,7 +51,7 @@ public class Cmd {
 	}
 
 	private void doDownload(String filename) {
-		client.retrieveFile(filename);
+		client.getFile(filename);
 	}
 
 	public static String help() {
@@ -64,7 +63,7 @@ public class Cmd {
 	}
 
 	// Parses a command into a Command enum and a filename.
-	public Pair<Command, String> parseCommand(String command) {
+	public CmdPair parseCommand(String command) {
 		String[] parts = command.split(" ");
 
 		// Attempt to parse the command into a Command enum
@@ -72,14 +71,14 @@ public class Cmd {
 		try {
 			c = Command.valueOf(parts[0].toUpperCase().trim());
 		} catch (Exception e) {
-			return new Pair<>(Command.HELP, "");
+			return new CmdPair(Command.HELP);
 		}
 
 		// If the command is upload or download, we need to parse the filename
 		if (c == Command.UPLOAD || c == Command.DOWNLOAD) {
 			String filename = parts[1];
-			return new Pair<>(c, filename);
+			return new CmdPair(c, filename);
 		}
-		return new Pair<>(c, "");
+		return new CmdPair(c);
 	}
 }
