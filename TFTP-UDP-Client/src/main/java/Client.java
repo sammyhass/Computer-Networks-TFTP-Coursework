@@ -157,6 +157,11 @@ public class Client implements IClient {
 	}
 
 	@Override
+	// Get file from TFTP Server
+	// first sends RRQ req to server
+	// waits for DATA
+	// send ACK
+	// repeat until all chunks received
 	public boolean getFile(String filename) {
 		return false;
 	}

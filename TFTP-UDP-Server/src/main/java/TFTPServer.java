@@ -119,7 +119,7 @@ public class TFTPServer implements Runnable {
 		if (dataPacket.size < TFTPRequestBuilder.MAX_BYTES - 4) {
 				// Check if we have received the last packet by checking if the size is less than the max size minus the opcode and block number
 			// If it is the last packet, we should write the file
-			System.out.println("Last packet received " + dataPacket.size);
+			System.out.println("Last packet received");
 			try {
 				dataPacketsBuilder.save();
 			} catch (Exception e) {
@@ -133,9 +133,11 @@ public class TFTPServer implements Runnable {
 		try {
 			byte[] buffer = new byte[TFTPRequestBuilder.MAX_BYTES];
 
-			TFTPRequestBuilder.packAck(buffer, 0);
+			TFTPRequestBuilder.packAck(buffer, dataPacket.blockNumber);
 
 			DatagramPacket ackPacket = new DatagramPacket(buffer, buffer.length, packet.getAddress(), packet.getPort());
+
+			System.out.println("Sending ACK for block number " + dataPacket.blockNumber);
 
 			socket.send(ackPacket);
 
