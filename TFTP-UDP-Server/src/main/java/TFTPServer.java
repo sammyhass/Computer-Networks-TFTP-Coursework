@@ -2,7 +2,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 
-public class TFTPServer {
+public class TFTPServer implements Runnable {
 	private DatagramSocket socket;
 	private boolean running;
 	private DataPacketsBuilder dataPacketsBuilder;
@@ -13,7 +13,7 @@ public class TFTPServer {
 		dataPacketsBuilder = new DataPacketsBuilder();
 	}
 
-	public void run() throws IOException, TFTPException {
+	public void run() {
 		while(running) {
 			DatagramPacket packet = null;
 			try {
@@ -23,43 +23,51 @@ public class TFTPServer {
 			} catch (IOException e) {
 				e.printStackTrace();
 				System.err.println("Error receiving packet");
-				System.exit(1);
 			}
 
 
 			TFTPRequestBuilder.OPCODE opcode = null;
 			try {
-			 opcode = TFTPRequestDecoder.unpackOp(packet.getData());
+			  opcode = TFTPRequestDecoder.unpackOp(packet.getData());
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.err.println("Error unpacking opcode");
+			}
+
+			try {
+				switch (opcode) {
+				case RRQ:
+					System.out.println("RRQ received");
+					handleRRQorWRQ(packet);
+					break;
+				case WRQ:
+					System.out.println("WRQ received");
+					handleRRQorWRQ(packet);
+					break;
+				case DATA:
+					System.out.println("DATA received");
+					handleData(packet);
+					break;
+				case ACK:
+					System.out.println("ACK received");
+					break;
+				case ERROR:
+					System.out.println("ERROR received");
+					break;
+				default:
+					System.out.println("Unknown opcode");
+				}
+			} catch (Exception e) {
+				System.err.println("Error handling packet");
+				e.printStackTrace();
+			}
+
+			try {
+			socket.send(packet);
+			} catch (IOException e) {
+				System.err.println("Error sending packet");
 				System.exit(1);
 			}
-
-
-			switch(opcode) {
-			case RRQ:
-				System.out.println("RRQ received");
-				handleRRQorWRQ(packet);
-				break;
-			case WRQ:
-				System.out.println("WRQ received");
-				handleRRQorWRQ(packet);
-				break;
-			case DATA:
-				System.out.println("DATA received");
-				handleData(packet);
-				break;
-			case ACK:
-				System.out.println("ACK received");
-				break;
-			case ERROR:
-				System.out.println("ERROR received");
-				break;
-			default:
-				System.out.println("Unknown opcode");
-			}
-			socket.send(packet);
 			packet = null;
 
 
@@ -107,9 +115,11 @@ public class TFTPServer {
 	public TFTPRequestDecoder.DataPacket handleData(DatagramPacket packet) throws TFTPException {
 		TFTPRequestDecoder.DataPacket dataPacket = TFTPRequestDecoder.unpackData(packet.getData(), 0);
 		dataPacketsBuilder.addDataPacket(dataPacket);
-		if (dataPacket.size < TFTPRequestBuilder.MAX_BYTES) {
+
+		if (dataPacket.size < TFTPRequestBuilder.MAX_BYTES - 4) {
+				// Check if we have received the last packet by checking if the size is less than the max size minus the opcode and block number
 			// If it is the last packet, we should write the file
-			System.out.println("Received last packet");
+			System.out.println("Last packet received " + dataPacket.size);
 			try {
 				dataPacketsBuilder.save();
 			} catch (Exception e) {

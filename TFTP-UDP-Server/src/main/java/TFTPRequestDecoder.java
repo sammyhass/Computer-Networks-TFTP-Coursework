@@ -111,8 +111,6 @@ public class TFTPRequestDecoder {
 	// packData returns the length of the packet and fills the buffer with the packet
 	// opcode = DATA
 	public static DataPacket unpackData(byte[] packet, int offset) throws TFTPException {
-
-
 		try {
 			// Check opcode
 			int op = unpackUint16(packet, offset);

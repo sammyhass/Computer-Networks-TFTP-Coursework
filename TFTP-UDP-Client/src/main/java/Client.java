@@ -39,7 +39,10 @@ public class Client implements IClient {
 		// Read file as byte array
 		byte[] file = null;
 		try {
-			file = Files.readAllBytes(Paths.get(filename));
+			// Read the filename from the resources folder
+			String path = new java.io.File(".").getCanonicalPath() + "/src/main/resources/" + filename;
+			System.out.println(path);
+			file = Files.readAllBytes(Paths.get(path));
 		} catch (IOException e) {
 			System.err.println("Error reading file: " + filename);
 //			System.exit(1);
@@ -95,16 +98,28 @@ public class Client implements IClient {
 
 
 		// Split file into packets
-		int numPackets = (int) Math.ceil((double) file.length / TFTPRequestBuilder.MAX_BYTES);
+		int numPackets = (int) Math.ceil((double) file.length / (TFTPRequestBuilder.MAX_BYTES - 4));
+
 
 		for (int i = 1; i <= numPackets; i++) {
 			// clear buffer
 			buffer = new byte[TFTPRequestBuilder.MAX_BYTES];
 
-			// Build DATA packet
-			int dataReqSize = TFTPRequestBuilder.packData(buffer, i, file);
+			// Get the current packet (leaving room for the opcode and block number - 4 bytes total)
+			int start = (i - 1) * (TFTPRequestBuilder.MAX_BYTES - 4);
+			int end = Math.min(start + TFTPRequestBuilder.MAX_BYTES - 4, file.length);
 
-			System.out.println("Sending packet " + i + " of " + numPackets);
+			byte[] packet = new byte[end - start];
+
+
+
+			System.arraycopy(file, start, packet, 0, end - start);
+
+
+
+			// Build data packet by splitting file into 512 byte chunks
+			int dataReqSize = TFTPRequestBuilder.packData(buffer, i, packet);
+
 
 			DatagramPacket dataPacket = new DatagramPacket(buffer, dataReqSize, host, port);
 
