@@ -4,7 +4,7 @@ TFTPRequestBuilder builds a request with all the relevant headers
 Here, we are only using octet mode as described in the coursework outline.
  */
 public class TFTPRequestBuilder {
-	public static int MAX_BYTES = 512;
+	public static int MAX_BYTES = 516; // Maximum bytes per packet (512 + header)
 
 	// Opcodes for the request
 	public enum OPCODE {

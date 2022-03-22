@@ -79,6 +79,7 @@ public class TFTPRequestDecoder {
 			// Check mode
 			offset += filename.length() + 1;
 			String mode = unpackString(packet, offset);
+			assert mode.equals("octet");
 
 			return new WrqOrRrqPacket(filename, TFTPRequestBuilder.OPCODE.values()[op]);
 		} catch (Exception e) {

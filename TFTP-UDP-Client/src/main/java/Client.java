@@ -32,7 +32,7 @@ public class Client implements IClient {
 	// first sends WRQ req to server
 	// waits for ACK
 	// split file into 512 byte chunks
-	// send each chunk to server
+	// send each chunk
 	// wait for ACK
 	// repeat until all chunks sent
 	public boolean sendFile(String filename) {
@@ -45,8 +45,7 @@ public class Client implements IClient {
 			file = Files.readAllBytes(Paths.get(path));
 		} catch (IOException e) {
 			System.err.println("Error reading file: " + filename);
-//			System.exit(1);
-			file = "Helllooooo".getBytes();
+			e.printStackTrace();
 		}
 
 		byte[] buffer = new byte[TFTPRequestBuilder.MAX_BYTES];

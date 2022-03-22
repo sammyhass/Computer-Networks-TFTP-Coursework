@@ -1,5 +1,6 @@
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -16,11 +17,19 @@ public class DataPacketsBuilder {
 		data = new byte[MAX_BYTES_PER_FILE];
 	}
 
+
+
+
+
 	public void setFilename(String filename) {
 		this.filename = filename;
 		System.out.println("Filename: " + filename);
 	}
 
+	public void setData(byte[] data) {
+		this.data = data;
+		this.size = data.length;
+	}
 
 	public void addDataPacket(TFTPRequestDecoder.DataPacket dataPacket) {
 		System.arraycopy(dataPacket.data, 0, data, size, dataPacket.size);
@@ -31,13 +40,30 @@ public class DataPacketsBuilder {
 		return data;
 	}
 
+	public byte getData(int index) {
+		return data[index];
+	}
+
+	public int getSize() {
+		return size;
+	}
+
+	public String getFilename() {
+		return filename;
+	}
+
 	// Save the data packets to a file
 	public boolean save() throws IOException {
-		// Print out the content of the data packets
+
+		// Save the file into the resources folder of the project
+		// Get the resources folder
+		String path = new java.io.File(".").getCanonicalPath() + "/src/main/resources/" + filename;
+
+		// Create the file
+		File file = new File(path);
+
 		System.out.println("saving");
 
-
-		File file = new File(filename);
 
 		FileOutputStream fos = new FileOutputStream(file);
 
@@ -49,11 +75,18 @@ public class DataPacketsBuilder {
 		return true;
 	}
 
-	private void reset() {
+	public void reset() {
 		size = 0;
 		filename = null;
 		data = new byte[MAX_BYTES_PER_FILE];
 	}
 
 
+	// Calculate the number of data packets needed to send the file given
+	// a packet size in bytes
+	public int getNumPackets(int packetSize) {
+		int ret =  (int) Math.ceil((double) size / packetSize);
+		return ret;
+
+	}
 }

@@ -3,7 +3,7 @@ TFTPRequestBuilder builds a request with all the relevant headers
 Here, we are only using octet mode as described in the coursework outline.
  */
 public class TFTPRequestBuilder {
-	public static int MAX_BYTES = 512;
+	public static int MAX_BYTES = 516;
 
 	// Opcodes for the request
 	public enum OPCODE {
@@ -69,10 +69,10 @@ public class TFTPRequestBuilder {
 		// append the block number to the buffer
 		length += packUInt16(buf, length, block);
 
-		// data is n bytes
-		for (int i = 0; i < data.length; i++) {
-			buf[length++] = data[i];
-		}
+		// Get the data from the file and append it to the buffer
+
+		System.arraycopy(data, 0, buf, length, data.length);
+		length += data.length;
 
 		return length;
 	}
