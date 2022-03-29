@@ -58,6 +58,7 @@ public class TFTPRequestDecoder {
 	public static OPCODE unpackOp(byte[] packet) throws TFTPException {
 		try {
 			int op = unpackUint16(packet, 0);
+			System.out.println(op);
 			return OPCODE.values()[op];
 		} catch (Exception e) {
 			throw new TFTPException("Could not unpack opcode");

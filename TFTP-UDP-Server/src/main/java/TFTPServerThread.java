@@ -7,6 +7,7 @@ import request.TFTPRequestDecoder;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.SocketException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -24,31 +25,23 @@ public class TFTPServerThread implements Runnable {
 	}
 
 	public TFTPServerThread(DatagramSocket socket)  {
+
 		this.socket = socket;
 		this.running = true;
 		this.dataPacketsBuilder = new DataPacketsBuilder();
 	}
 
-	public void setRequestPacket(DatagramPacket packet) throws TFTPException {
-		assert packet != null && packet.getData() != null;
+	public void setRequestPacket(DatagramPacket packet) {
 		this.requestPacket = packet;
-
-		handleRequestPacket(TFTPRequestDecoder.unpackOp(packet.getData()));
+		handleRequestPacket();
 	}
 
 
 	public void run() {
 		while(running) {
-			OPCODE opcode = null;
 			assert requestPacket != null;
-			try {
-				opcode = TFTPRequestDecoder.unpackOp(requestPacket.getData());
-			} catch (Exception e) {
-				System.err.println("Error unpacking opcode");
-			}
 
-
-			handleRequestPacket(opcode);
+			handleRequestPacket();
 
 			try {
 				socket.send(requestPacket);
@@ -62,8 +55,18 @@ public class TFTPServerThread implements Runnable {
 		socket.close();
 	}
 
-	private void handleRequestPacket(OPCODE opcode) {
-		assert requestPacket != null;
+	private void handleRequestPacket() {
+		assert requestPacket.getData() != null;
+
+		OPCODE opcode = null;
+
+		try {
+			opcode = TFTPRequestDecoder.unpackOp(requestPacket.getData());
+		} catch (Exception e) {
+			System.err.println("Error unpacking opcode");
+			return;
+		}
+
 		try {
 			switch (opcode) {
 			case RRQ:
@@ -94,7 +97,7 @@ public class TFTPServerThread implements Runnable {
 	}
 
 	public void handleRRQorWRQ(DatagramPacket packet) {
-		TFTPRequestDecoder.WrqOrRrqPacket request = null;
+		TFTPRequestDecoder.WrqOrRrqPacket request;
 		try {
 			request = TFTPRequestDecoder.unpackWRQorRRQ(packet.getData(), 0);
 
@@ -116,6 +119,7 @@ public class TFTPServerThread implements Runnable {
 		} else {
 			// If the operation is a read, we should send the file
 			// to the client
+			System.out.println("Retrieving file: " + request.filename + "...");
 			try {
 				sendFile(request.filename, packet);
 			} catch (Exception e) {
@@ -221,7 +225,7 @@ public class TFTPServerThread implements Runnable {
 				System.err.println("Error receiving ACK packet");
 			}
 
-			System.out.println("Sent packet " + i);
+			System.out.println("Sent packet " + i + "/" + numPackets);
 
 		}
 
