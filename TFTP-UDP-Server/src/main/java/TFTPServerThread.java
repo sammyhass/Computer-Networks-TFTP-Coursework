@@ -21,15 +21,13 @@ public class TFTPServerThread implements Runnable {
 
 	public void stop() {
 		running = false;
+		System.out.println("Server thread stopped" + socket.getInetAddress());
 	}
 
-	public TFTPServerThread(DatagramSocket socket, DatagramPacket packet) {
+	public TFTPServerThread(DatagramSocket socket)  {
 		this.socket = socket;
-		this.requestPacket = packet;
-
 		this.running = true;
 		this.dataPacketsBuilder = new DataPacketsBuilder();
-		System.out.println("Server thread started");
 	}
 
 	public void setRequestPacket(DatagramPacket packet) throws TFTPException {
@@ -37,8 +35,6 @@ public class TFTPServerThread implements Runnable {
 		this.requestPacket = packet;
 
 		handleRequestPacket(TFTPRequestDecoder.unpackOp(packet.getData()));
-
-
 	}
 
 

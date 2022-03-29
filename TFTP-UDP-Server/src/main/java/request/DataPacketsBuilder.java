@@ -58,7 +58,7 @@ public class DataPacketsBuilder {
 
 		// Save the file into the resources folder of the project
 		// Get the resources folder
-		String path = new java.io.File(".").getCanonicalPath() + filename;
+		String path = new java.io.File(".").getCanonicalPath() + '/' + filename;
 
 		// Create the file
 		File file = new File(path);

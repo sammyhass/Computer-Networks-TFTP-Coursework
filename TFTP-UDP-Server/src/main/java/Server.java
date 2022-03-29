@@ -21,14 +21,14 @@ public class Server {
 					socket.receive(packet);
 
 					InetAddress clientAddress = packet.getAddress();
-				;
-
 
 					Thread t = null;
 					TFTPServerThread client = clients.get(clientAddress);
 					try {
 						if (client == null) {
-							client = new TFTPServerThread(socket, packet);
+							System.out.println("New client connected: " + clientAddress);
+							client = new TFTPServerThread(socket);
+							client.setRequestPacket(packet);
 							clients.put(clientAddress, client);
 							t = new Thread(client);
 							t.start();
@@ -47,9 +47,6 @@ public class Server {
 
 				}
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
-
 		}
 	}
 }
