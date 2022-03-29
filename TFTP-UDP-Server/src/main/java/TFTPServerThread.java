@@ -1,103 +1,117 @@
+import exceptions.TFTPException;
+import request.DataPacketsBuilder;
+import request.OPCODE;
+import request.TFTPRequestBuilder;
+import request.TFTPRequestDecoder;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.SocketException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Objects;
 
+
+// A Server Thread that handles requests from a single client.
 public class TFTPServerThread implements Runnable {
-	private DatagramSocket socket;
+	private final DatagramSocket socket;
+	private DatagramPacket requestPacket;
 	private boolean running;
 	private DataPacketsBuilder dataPacketsBuilder;
-	// Client address
-	private String clientAddress;
-	// Client port
-	private int clientPort;
 
-	public TFTPServerThread(int port) throws Exception {
-		socket = new DatagramSocket(port);
-		running = true;
-		dataPacketsBuilder = new DataPacketsBuilder();
+	public void stop() {
+		running = false;
 	}
+
+	public TFTPServerThread(DatagramSocket socket, DatagramPacket packet) {
+		this.socket = socket;
+		this.requestPacket = packet;
+
+		this.running = true;
+		this.dataPacketsBuilder = new DataPacketsBuilder();
+		System.out.println("Server thread started");
+	}
+
+	public void setRequestPacket(DatagramPacket packet) throws TFTPException {
+		assert packet != null;
+		this.requestPacket = packet;
+
+		handleRequestPacket(TFTPRequestDecoder.unpackOp(packet.getData()));
+
+
+	}
+
 
 	public void run() {
 		while(running) {
-			DatagramPacket packet = null;
+			OPCODE opcode = null;
+			assert requestPacket != null;
 			try {
-				byte[] buffer = new byte[TFTPRequestBuilder.MAX_BYTES];
-				packet = new DatagramPacket(buffer, buffer.length);
-				socket.receive(packet);
-				clientAddress = packet.getAddress().getHostAddress();
-				clientPort = packet.getPort();
-			} catch (IOException e) {
-				e.printStackTrace();
-				System.err.println("Error receiving packet");
-			}
-
-
-			TFTPRequestBuilder.OPCODE opcode = null;
-			try {
-			  opcode = TFTPRequestDecoder.unpackOp(packet.getData());
+				opcode = TFTPRequestDecoder.unpackOp(requestPacket.getData());
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.err.println("Error unpacking opcode");
 			}
 
-			try {
-				switch (opcode) {
-				case RRQ:
-					System.out.println("RRQ received");
-					handleRRQorWRQ(packet);
-					break;
-				case WRQ:
-					System.out.println("WRQ received");
-					handleRRQorWRQ(packet);
-					break;
-				case DATA:
-					System.out.println("DATA received");
-					handleData(packet);
-					break;
-				case ACK:
-					System.out.println("ACK received");
-					break;
-				case ERROR:
-					System.out.println("ERROR received");
-					break;
-				default:
-					System.out.println("Unknown opcode");
-				}
-			} catch (Exception e) {
-				System.err.println("Error handling packet");
-				e.printStackTrace();
-			}
+
+			handleRequestPacket(opcode);
 
 			try {
-			socket.send(packet);
+				socket.send(requestPacket);
 			} catch (IOException e) {
 				System.err.println("Error sending packet");
-				System.exit(1);
 			}
-			packet = null;
+			requestPacket = null;
 
 
 		}
 		socket.close();
 	}
 
-	public boolean handleRRQorWRQ(DatagramPacket packet) {
+	private void handleRequestPacket(OPCODE opcode) {
+		try {
+			switch (Objects.requireNonNull(opcode)) {
+			case RRQ:
+				System.out.println("RRQ received");
+				handleRRQorWRQ(requestPacket);
+				break;
+			case WRQ:
+				System.out.println("WRQ received");
+				handleRRQorWRQ(requestPacket);
+				break;
+			case DATA:
+				System.out.println("DATA received");
+				handleData(requestPacket);
+				break;
+			case ACK:
+				System.out.println("ACK received");
+				break;
+			case ERROR:
+				System.out.println("ERROR received");
+				break;
+			default:
+				System.out.println("Unknown opcode");
+			}
+		} catch (Exception e) {
+			System.err.println("Error handling packet");
+			e.printStackTrace();
+		}
+	}
+
+	public void handleRRQorWRQ(DatagramPacket packet) {
 		TFTPRequestDecoder.WrqOrRrqPacket request = null;
 		try {
 			request = TFTPRequestDecoder.unpackWRQorRRQ(packet.getData(), 0);
 
-			assert request.opcode == TFTPRequestBuilder.OPCODE.RRQ || request.opcode == TFTPRequestBuilder.OPCODE.WRQ;
+			assert request.opcode == OPCODE.RRQ || request.opcode == OPCODE.WRQ;
 
 			System.out.println("Filename: " + request.filename);
 		} catch (Exception e) {
 			System.err.println("Error unpacking request");
-			return false;
+			return;
 		}
 
-		if (request.opcode == TFTPRequestBuilder.OPCODE.WRQ) {
+		if (request.opcode == OPCODE.WRQ) {
 			// If the operation is a write, we should initialize our
 			// filename for the data packets builder
 			dataPacketsBuilder.setFilename(request.filename);
@@ -116,12 +130,10 @@ public class TFTPServerThread implements Runnable {
 
 		}
 
-		return true;
-
 	}
 	// sendFile to TFTP Server
 	// first sends WRQ req to server
-	// waits for ACK
+	// waits for ACK from client
 	// split file into 512 byte chunks
 	// send each chunk
 	// wait for ACK
@@ -131,42 +143,21 @@ public class TFTPServerThread implements Runnable {
 		byte[] file = null;
 		try {
 			// Read the filename from the resources folder
-			String path = new java.io.File(".").getCanonicalPath() + "/src/main/resources/" + filename;
-			System.out.println(path);
+			String path = new java.io.File(".").getCanonicalPath()+ "/" + filename;
 			file = Files.readAllBytes(Paths.get(path));
 		} catch (IOException e) {
-			System.err.println("Error reading file: " + filename);
-//			System.exit(1);
-			file = "Helllooooo".getBytes();
+			// If there was an error reading the file, send an error packet
+			System.err.println("Error reading file");
+
+			sendError(packet);
+			return;
 		}
 
+		// Wait for ACK
 		byte[] buffer = new byte[TFTPRequestBuilder.MAX_BYTES];
-
-		// Build WRQ packet
-		int wrqReqSize = TFTPRequestBuilder.packWRQ(buffer, filename);
-
-		DatagramPacket wrqPacket = new DatagramPacket(buffer, wrqReqSize, packet.getAddress(), packet.getPort());
-
-		// Send WRQ packet
-		try {
-			socket.send(wrqPacket);
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.err.println("Error sending WRQ packet");
-			System.exit(1);
-		}
-
-		// Wait till we receive ACK
-		// clear buffer
-		buffer = new byte[TFTPRequestBuilder.MAX_BYTES];
 
 		boolean hasReceivedACK = false;
 
-		try {
-			socket.setSoTimeout(2000);
-		} catch (SocketException e) {
-			System.err.println("Error setting socket timeout");
-		}
 
 		DatagramPacket ackPacket = new DatagramPacket(buffer, TFTPRequestBuilder.MAX_BYTES, packet.getAddress(), packet.getPort());
 
@@ -220,7 +211,6 @@ public class TFTPServerThread implements Runnable {
 			} catch (IOException e) {
 				e.printStackTrace();
 				System.err.println("Error sending DATA packet");
-				System.exit(1);
 			}
 
 			// Wait till we receive ACK
@@ -234,24 +224,32 @@ public class TFTPServerThread implements Runnable {
 					e.printStackTrace();
 				}
 				System.err.println("Error receiving ACK packet");
-				System.exit(1);
 			}
 
 			System.out.println("Sent packet " + i);
 
 		}
+
+		System.out.println("File sent successfully");
 	}
 
+	private void sendError(DatagramPacket packet) {
 
-
-	private void sendData(int blockNumber, DatagramPacket packet) {
+		// Create an error packet
 		byte[] buf = new byte[TFTPRequestBuilder.MAX_BYTES];
-		TFTPRequestBuilder.packData(buf, blockNumber, dataPacketsBuilder.getData());
-		System.out.println("Sending data packet " + blockNumber);
+		int size = TFTPRequestBuilder.packError(buf, 1, "File Not Found");
+
+		// Send the error packet
+		DatagramPacket errorPacket = new DatagramPacket(buf, size, packet.getAddress(), packet.getPort());
+		try {
+			socket.send(errorPacket);
+		} catch (IOException e) {
+			System.err.println("Error sending error packet");
+		}
 	}
 
 	// Send an ACK packet to the client with the given block number
-	private boolean sendACK(int block, DatagramPacket packet) {
+	private void sendACK(int block, DatagramPacket packet) {
 		try {
 			byte[] buffer = new byte[TFTPRequestBuilder.MAX_BYTES];
 
@@ -264,18 +262,16 @@ public class TFTPServerThread implements Runnable {
 
 		} catch (Exception e) {
 			System.err.println("Error sending ACK");
-			return true;
 		}
-		return false;
 	}
 
 	// Handles receiving data packets and sending ACKs back
-	public TFTPRequestDecoder.DataPacket handleData(DatagramPacket packet) throws TFTPException {
+	public void handleData(DatagramPacket packet) throws TFTPException {
 		TFTPRequestDecoder.DataPacket dataPacket = TFTPRequestDecoder.unpackData(packet.getData(), 0);
 		dataPacketsBuilder.addDataPacket(dataPacket);
 
-		if (dataPacket.size < TFTPRequestBuilder.MAX_BYTES - 4) {
-				// Check if we have received the last packet by checking if the size is less than the max size minus the opcode and block number
+		if (packet.getLength() < TFTPRequestBuilder.MAX_BYTES) {
+			// Check if we have received the last packet by checking if the size is less than the max size
 			// If it is the last packet, we should write the file
 			System.out.println("Last packet received");
 			try {
@@ -287,7 +283,6 @@ public class TFTPServerThread implements Runnable {
 		}
 		// Send ACK back
 		sendACK(dataPacket.blockNumber, packet);
-		return dataPacket;
 	}
 
 

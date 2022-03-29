@@ -1,3 +1,8 @@
+package request;
+
+import exceptions.TFTPException;
+import request.OPCODE;
+
 import java.util.Arrays;
 
 // We use this class to ensure that responses from the server are
@@ -7,9 +12,9 @@ public class TFTPRequestDecoder {
 
 	public static class WrqOrRrqPacket {
 		public final String filename;
-		public final TFTPRequestBuilder.OPCODE opcode;
+		public final OPCODE opcode;
 
-		public WrqOrRrqPacket(String filename, TFTPRequestBuilder.OPCODE op) {
+		public WrqOrRrqPacket(String filename, OPCODE op) {
 			this.filename = filename;
 			this.opcode = op;
 		}
@@ -40,7 +45,7 @@ public class TFTPRequestDecoder {
 		try {
 			int offset = 0;
 			int op = unpackUint16(packet, offset);
-			assert op == TFTPRequestBuilder.OPCODE.ACK.getValue();
+			assert op == OPCODE.ACK.getValue();
 
 			offset += 2;
 			return unpackUint16(packet, offset);
@@ -50,10 +55,10 @@ public class TFTPRequestDecoder {
 	}
 
 	// Returns opcode from the packet (2 bytes)
-	public static TFTPRequestBuilder.OPCODE unpackOp(byte[] packet) throws TFTPException {
+	public static OPCODE unpackOp(byte[] packet) throws TFTPException {
 		try {
 			int op = unpackUint16(packet, 0);
-			return TFTPRequestBuilder.OPCODE.values()[op];
+			return OPCODE.values()[op];
 		} catch (Exception e) {
 			throw new TFTPException("Could not unpack opcode");
 		}
@@ -70,7 +75,7 @@ public class TFTPRequestDecoder {
 		try {
 			// Check opcode
 			int op = unpackUint16(packet, offset);
-			assert op == TFTPRequestBuilder.OPCODE.WRQ.getValue() || op == TFTPRequestBuilder.OPCODE.RRQ.getValue();
+			assert op == OPCODE.WRQ.getValue() || op == OPCODE.RRQ.getValue();
 
 			// Check filename
 			offset += 2;
@@ -81,7 +86,7 @@ public class TFTPRequestDecoder {
 			String mode = unpackString(packet, offset);
 			assert mode.equals("octet");
 
-			return new WrqOrRrqPacket(filename, TFTPRequestBuilder.OPCODE.values()[op]);
+			return new WrqOrRrqPacket(filename, OPCODE.values()[op]);
 		} catch (Exception e) {
 			throw new TFTPException("Invalid WRQ/RRQ packet");
 		}
@@ -115,7 +120,7 @@ public class TFTPRequestDecoder {
 		try {
 			// Check opcode
 			int op = unpackUint16(packet, offset);
-			if (op != TFTPRequestBuilder.OPCODE.DATA.getValue()) {
+			if (op != OPCODE.DATA.getValue()) {
 				throw new TFTPException("Invalid DATA packet");
 			}
 			offset += 2;

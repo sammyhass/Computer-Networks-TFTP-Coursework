@@ -1,22 +1,11 @@
+package request;
+
 /*
-TFTPRequestBuilder builds a request with all the relevant headers
+request.TFTPRequestBuilder builds a request with all the relevant headers
 Here, we are only using octet mode as described in the coursework outline.
  */
 public class TFTPRequestBuilder {
 	public static int MAX_BYTES = 516;
-
-	// Opcodes for the request
-	public enum OPCODE {
-		NOOP(0), RRQ(1), WRQ(2), DATA(3), ACK(4), ERROR(5);
-		private final int value;
-		OPCODE(int value) {
-			this.value = value;
-		}
-		public int getValue() {
-			return value;
-		}
-	}
-
 
 
 	// RRQ/WRQ packet
@@ -49,6 +38,27 @@ public class TFTPRequestBuilder {
 
 		return length;
 	}
+
+	// Error packet
+	//
+	//  2 bytes     2 bytes     string    1 byte
+	// ----------------------------------------
+	// | Opcode |  ErrorCode |   ErrMsg   |   0  |
+	// ----------------------------------------
+	// packError returns the length of the packet and fills the buffer with the packet
+	public static int packError(byte[] buf, int errorCode, String errorMessage) {
+		int length = 0;
+
+		length += packUInt16(buf, length, OPCODE.ERROR.getValue());
+
+		length += packUInt16(buf, length, errorCode);
+		length += packString(buf, length, errorMessage);
+		buf[length++] = 0;
+
+
+		return length;
+	}
+
 
 
 
