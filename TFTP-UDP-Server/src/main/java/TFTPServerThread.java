@@ -49,7 +49,6 @@ public class TFTPServerThread implements Runnable {
 			try {
 				opcode = TFTPRequestDecoder.unpackOp(requestPacket.getData());
 			} catch (Exception e) {
-				e.printStackTrace();
 				System.err.println("Error unpacking opcode");
 			}
 
@@ -70,7 +69,7 @@ public class TFTPServerThread implements Runnable {
 
 	private void handleRequestPacket(OPCODE opcode) {
 		try {
-			switch (Objects.requireNonNull(opcode)) {
+			switch (opcode) {
 			case RRQ:
 				System.out.println("RRQ received");
 				handleRRQorWRQ(requestPacket);
