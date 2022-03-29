@@ -1,7 +1,6 @@
 package request;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -54,7 +53,7 @@ public class DataPacketsBuilder {
 	}
 
 	// Save the data packets to a file
-	public boolean save() throws IOException {
+	public void save() throws IOException {
 
 		// Save the file into the resources folder of the project
 		// Get the resources folder
@@ -63,7 +62,7 @@ public class DataPacketsBuilder {
 		// Create the file
 		File file = new File(path);
 
-		System.out.println("saving");
+		System.out.println("Saving file to: " + path);
 
 
 		FileOutputStream fos = new FileOutputStream(file);
@@ -73,7 +72,6 @@ public class DataPacketsBuilder {
 		fos.flush();
 		reset();
 
-		return true;
 	}
 
 	public void reset() {

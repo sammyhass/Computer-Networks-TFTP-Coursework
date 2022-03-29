@@ -9,7 +9,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Objects;
 
 
 // A Server Thread that handles requests from a single client.
@@ -17,7 +16,7 @@ public class TFTPServerThread implements Runnable {
 	private final DatagramSocket socket;
 	private DatagramPacket requestPacket;
 	private boolean running;
-	private DataPacketsBuilder dataPacketsBuilder;
+	private final DataPacketsBuilder dataPacketsBuilder;
 
 	public void stop() {
 		running = false;
@@ -31,7 +30,7 @@ public class TFTPServerThread implements Runnable {
 	}
 
 	public void setRequestPacket(DatagramPacket packet) throws TFTPException {
-		assert packet != null;
+		assert packet != null && packet.getData() != null;
 		this.requestPacket = packet;
 
 		handleRequestPacket(TFTPRequestDecoder.unpackOp(packet.getData()));
@@ -64,6 +63,7 @@ public class TFTPServerThread implements Runnable {
 	}
 
 	private void handleRequestPacket(OPCODE opcode) {
+		assert requestPacket != null;
 		try {
 			switch (opcode) {
 			case RRQ:
