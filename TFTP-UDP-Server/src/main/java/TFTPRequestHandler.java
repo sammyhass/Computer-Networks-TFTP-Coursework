@@ -7,37 +7,46 @@ import request.TFTPRequestDecoder;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.SocketException;
+import java.nio.channels.Channel;
+import java.nio.channels.DatagramChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
 
 // A Server Thread that handles requests from a single client.
-public class TFTPServerThread implements Runnable {
-	private final DatagramSocket socket;
+public class TFTPRequestHandler {
 	private DatagramPacket requestPacket;
 	private boolean running;
 	private final DataPacketsBuilder dataPacketsBuilder;
+	private final DatagramSocket socket;
 
 	public void stop() {
 		running = false;
 		System.out.println("Server thread stopped" + socket.getInetAddress());
 	}
 
-	public TFTPServerThread(DatagramSocket socket)  {
-
+	public TFTPRequestHandler(DatagramSocket socket)  {
+		System.out.println("Server thread started");
 		this.socket = socket;
 		this.running = true;
 		this.dataPacketsBuilder = new DataPacketsBuilder();
 	}
 
-	public void setRequestPacket(DatagramPacket packet) {
+	public void handle(DatagramPacket packet) {
 		this.requestPacket = packet;
 		handleRequestPacket();
 	}
 
 
 	public void run() {
+		try {
+			socket.setSoTimeout(50);
+		} catch (SocketException e) {
+			System.err.println("Socket timed out");
+			return;
+		}
 		while(running) {
 			assert requestPacket != null;
 
@@ -58,7 +67,7 @@ public class TFTPServerThread implements Runnable {
 	private void handleRequestPacket() {
 		assert requestPacket.getData() != null;
 
-		OPCODE opcode = null;
+		OPCODE opcode;
 
 		try {
 			opcode = TFTPRequestDecoder.unpackOp(requestPacket.getData());
@@ -142,12 +151,11 @@ public class TFTPServerThread implements Runnable {
 		byte[] file = null;
 		try {
 			// Read the filename from the resources folder
-			String path = new java.io.File(".").getCanonicalPath()+ "/" + filename;
+			String path = new java.io.File(".").getCanonicalPath() +  "/" + filename;
 			file = Files.readAllBytes(Paths.get(path));
 		} catch (IOException e) {
 			// If there was an error reading the file, send an error packet
 			System.err.println("Error reading file");
-
 			sendError(packet);
 			return;
 		}
@@ -283,8 +291,5 @@ public class TFTPServerThread implements Runnable {
 		// Send ACK back
 		sendACK(dataPacket.blockNumber, packet);
 	}
-
-
-
 
 }
