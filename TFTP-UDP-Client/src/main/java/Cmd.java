@@ -14,7 +14,7 @@ public class Cmd {
 		this.scanner = new Scanner(System.in);
 	}
 
-	public void run() {
+	public void run() throws TFTPException {
 		System.out.println("Welcome to the file transfer program!");
 		System.out.println(help());
 		while (true) {
@@ -25,7 +25,7 @@ public class Cmd {
 		}
 	}
 
-	private void doCommand(Command command, String filename) {
+	private void doCommand(Command command, String filename) throws TFTPException {
 		switch (command) {
 		case UPLOAD:
 			doUpload(filename);
@@ -50,7 +50,7 @@ public class Cmd {
 		client.sendFile(filename);
 	}
 
-	private void doDownload(String filename) {
+	private void doDownload(String filename) throws TFTPException {
 		client.getFile(filename);
 	}
 

@@ -139,7 +139,7 @@ public class TFTPRequestHandler {
 		}
 
 	}
-	// sendFile to TFTP Server
+	// sendFile from TFTP Server
 	// first sends WRQ req to server
 	// waits for ACK from client
 	// split file into 512 byte chunks
@@ -167,24 +167,7 @@ public class TFTPRequestHandler {
 
 
 		DatagramPacket ackPacket = new DatagramPacket(buffer, TFTPRequestBuilder.MAX_BYTES, packet.getAddress(), packet.getPort());
-
-		while (!hasReceivedACK) {
-			try {
-				socket.receive(ackPacket);
-			} catch (IOException e) {
-				System.err.println("Error receiving ACK packet. Retrying...");
-				continue;
-			}
-
-			try {
-				int n = TFTPRequestDecoder.unpackACK(ackPacket.getData());
-				hasReceivedACK = true;
-			} catch (TFTPException e) {
-				continue;
-			}
-			System.out.println("Received ACK, sending data...");
-		}
-
+//
 
 		// Split file into packets
 		int numPackets = (int) Math.ceil((double) file.length / (TFTPRequestBuilder.MAX_BYTES - 4));
@@ -223,7 +206,6 @@ public class TFTPRequestHandler {
 			// Wait till we receive ACK
 			try {
 				socket.receive(ackPacket);
-
 				// Ensure the ACK packet echos the block number we sent
 				assert TFTPRequestDecoder.unpackACK(ackPacket.getData()) == i;
 			} catch (Exception e) {

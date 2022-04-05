@@ -10,5 +10,5 @@ public interface IClient {
 
 	// Receives a file from the server.
 	// @return true if the file was received successfully, false otherwise
-	 boolean getFile(String filename);
+	 boolean getFile(String filename) throws TFTPException;
 }

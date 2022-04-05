@@ -22,7 +22,7 @@ public class Server {
 
 			if (!clients.containsKey(clientAddress)) {
 				System.out.println("New client: " + clientAddress);
-				 clients.put(clientAddress, new TFTPRequestHandler(socket));
+				clients.put(clientAddress, new TFTPRequestHandler(socket));
 			}
 			TFTPRequestHandler handler = clients.get(clientAddress);
 			handler.handle(packet);
