@@ -1,6 +1,9 @@
 package request;
 
+import exceptions.TFTPException;
+
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -18,8 +21,32 @@ public class DataPacketsBuilder {
 	}
 
 
+	public static DataPacketsBuilder fromFile(String filename) throws TFTPException, IOException {
+		DataPacketsBuilder dataPacketsBuilder = new DataPacketsBuilder();
+		dataPacketsBuilder.setFilename(filename);
 
+		String path = new File(".").getCanonicalPath() + '/' + filename;
+		// Create the file
+		File file = new File(path);
 
+		// Check if the file exists
+		if (!file.exists()) {
+			throw new TFTPException("File does not exist");
+		}
+
+		// Check if the file is too large
+		if (file.length() > MAX_BYTES_PER_FILE) {
+			throw new TFTPException("File is too large");
+		}
+
+		// Read the file into the data packets builder
+		byte[] data = new byte[(int) file.length()];
+		FileInputStream fis = new FileInputStream(file);
+		fis.read(data);
+		fis.close();
+		dataPacketsBuilder.setData(data);
+		return dataPacketsBuilder;
+	}
 
 	public void setFilename(String filename) {
 		this.filename = filename;
@@ -30,6 +57,7 @@ public class DataPacketsBuilder {
 		this.data = data;
 		this.size = data.length;
 	}
+
 
 	public void addDataPacket(TFTPRequestDecoder.DataPacket dataPacket) {
 		System.arraycopy(dataPacket.data, 0, data, size, dataPacket.size);
@@ -58,7 +86,6 @@ public class DataPacketsBuilder {
 		// Save the file into the resources folder of the project
 		// Get the resources folder
 		String path = new File(".").getCanonicalPath() + '/' + filename;
-
 		// Create the file
 		File file = new File(path);
 

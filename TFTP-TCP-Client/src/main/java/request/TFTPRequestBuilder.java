@@ -6,6 +6,7 @@ Here, we are only using octet mode as described in the coursework outline.
  */
 public class TFTPRequestBuilder {
 	public static int MAX_BYTES = 516;
+	public static int HEADER_SIZE = 4;
 
 
 	// RRQ/WRQ packet
@@ -83,6 +84,7 @@ public class TFTPRequestBuilder {
 
 		System.arraycopy(data, 0, buf, length, data.length);
 		length += data.length;
+
 
 		return length;
 	}

@@ -1,8 +1,8 @@
 package request;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import exceptions.TFTPException;
+
+import java.io.*;
 
 // Build up data packets for a given file
 // and save them to a file
@@ -13,11 +13,40 @@ public class DataPacketsBuilder {
 	private int size = 0;
 	private String filename;
 
-	public DataPacketsBuilder() {
+	private RequestHandlerLogger logger;
+
+	public DataPacketsBuilder(RequestHandlerLogger logger) {
 		data = new byte[MAX_BYTES_PER_FILE];
+		this.logger = logger;
 	}
 
 
+	public static DataPacketsBuilder fromFile(String filename, RequestHandlerLogger logger) throws TFTPException, IOException {
+		DataPacketsBuilder dataPacketsBuilder = new DataPacketsBuilder(logger);
+		dataPacketsBuilder.setFilename(filename);
+
+		String path = new File(".").getCanonicalPath() + '/' + filename;
+		// Create the file
+		File file = new File(path);
+
+		// Check if the file exists
+		if (!file.exists()) {
+			throw new FileNotFoundException("File does not exist");
+		}
+
+		// Check if the file is too large
+		if (file.length() > MAX_BYTES_PER_FILE) {
+			throw new TFTPException("File is too large");
+		}
+
+		// Read the file into the data packets builder
+		byte[] data = new byte[(int) file.length()];
+		FileInputStream fis = new FileInputStream(file);
+		fis.read(data);
+		fis.close();
+		dataPacketsBuilder.setData(data);
+		return dataPacketsBuilder;
+	}
 
 
 
@@ -62,8 +91,7 @@ public class DataPacketsBuilder {
 		// Create the file
 		File file = new File(path);
 
-		System.out.println("Saving file to: " + path);
-
+		logger.logFileSave(path);
 
 		FileOutputStream fos = new FileOutputStream(file);
 
@@ -84,8 +112,7 @@ public class DataPacketsBuilder {
 	// Calculate the number of data packets needed to send the file given
 	// a packet size in bytes
 	public int getNumPackets(int packetSize) {
-		int ret =  (int) Math.ceil((double) size / packetSize);
-		return ret;
+		return (int) Math.ceil((double) size / packetSize);
 
 	}
 }

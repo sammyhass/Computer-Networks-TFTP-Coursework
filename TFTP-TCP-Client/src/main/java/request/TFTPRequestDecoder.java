@@ -32,6 +32,16 @@ public class TFTPRequestDecoder {
 		}
 	}
 
+	public static class ErrorPacket {
+		public final int errorCode;
+		public final String errorMessage;
+
+		public ErrorPacket(int errorCode, String errorMessage) {
+			this.errorCode = errorCode;
+			this.errorMessage = errorMessage;
+		}
+	}
+
 	// ACK packet
 	//
 	//  2 bytes    2 bytes
@@ -125,7 +135,6 @@ public class TFTPRequestDecoder {
 			offset += 2;
 			// Block number
 			int block = unpackUint16(packet, offset);
-			System.out.println("Block number: " + block);
 
 			// Data
 			offset += 2;
@@ -140,7 +149,30 @@ public class TFTPRequestDecoder {
 			throw new TFTPException("Invalid DATA packet");
 		}
 
+	}
 
-
+	// ERROR packet
+	//  2 bytes    2 bytes     string    1 byte
+	// ------------------------------------------
+	// | Opcode |   ErrorCode |   ErrMsg   |   0  |
+	// ------------------------------------------
+	// Returns the error code and message or throws an exception if the packet is invalid.
+	public static ErrorPacket unpackError(byte[] packet, int offset) throws TFTPException {
+		try {
+			// Check opcode
+			int op = unpackUint16(packet, offset);
+			if (op != OPCODE.ERROR.getValue()) {
+				throw new TFTPException("Invalid ERROR packet");
+			}
+			offset += 2;
+			// Error code
+			int errorCode = unpackUint16(packet, offset);
+			offset += 2;
+			// Error message
+			String errorMessage = unpackString(packet, offset);
+			return new ErrorPacket(errorCode, errorMessage);
+		} catch (Exception e) {
+			throw new TFTPException("Invalid ERROR packet");
+		}
 	}
 }

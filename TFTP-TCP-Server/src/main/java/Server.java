@@ -1,8 +1,10 @@
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class Server {
+
     ServerSocket serverSocket;
 
     public void start(int port) throws IOException {
@@ -12,8 +14,9 @@ public class Server {
         while (true) {
             Socket clientSocket = serverSocket.accept();
 
-            // Create a new thread for the client
-             new TFTPRequestHandler(clientSocket).start();
+            Thread t = new TFTPRequestHandler(clientSocket);
+
+            t.start();
 
         }
     }

@@ -116,30 +116,24 @@ public class TFTPRequestDecoder {
 	// packData returns the length of the packet and fills the buffer with the packet
 	// opcode = DATA
 	public static DataPacket unpackData(byte[] packet, int offset) throws TFTPException {
-		try {
-			// Check opcode
-			int op = unpackUint16(packet, offset);
-			if (op != OPCODE.DATA.getValue()) {
-				throw new TFTPException("Invalid DATA packet");
-			}
-			offset += 2;
-			// Block number
-			int block = unpackUint16(packet, offset);
-			System.out.println("Block number: " + block);
-
-			// Data
-			offset += 2;
-			// Rest of packet contains data, find the end of the data
-			int end = offset;
-			while (end < packet.length && packet[end] != 0) {
-				end++;
-			}
-			byte[] data = Arrays.copyOfRange(packet, offset, end);
-			return new DataPacket(block, data, data.length);
-		} catch (Exception e) {
-			throw new TFTPException("Invalid DATA packet");
+		// Check opcode
+		int op = unpackUint16(packet, offset);
+		if (op != OPCODE.DATA.getValue()) {
+			throw new TFTPException("Invalid DATA packet - Incorrect opcode");
 		}
+		offset += 2;
+		// Block number
+		int block = unpackUint16(packet, offset);
 
+		// Data
+		offset += 2;
+		// Rest of packet contains data, find the end of the data
+		int end = offset;
+		while (end < packet.length && packet[end] != 0) {
+			end++;
+		}
+		byte[] data = Arrays.copyOfRange(packet, offset, end);
+		return new DataPacket(block, data, data.length);
 
 
 	}

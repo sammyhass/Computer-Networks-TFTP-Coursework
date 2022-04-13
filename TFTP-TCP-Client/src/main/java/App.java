@@ -7,9 +7,7 @@ import java.net.Socket;
 
 public class App {
     public static void main(String[] args) throws TFTPException, IOException {
-        Socket socket = new Socket("localhost", 8080);
-        TFTPClient client = new TFTPClient(socket);
-        Cmd cmd = new Cmd(client);
+        Cmd cmd = new Cmd("localhost", 8080);
         try {
             cmd.run();
         } catch (Exception e) {

@@ -40,30 +40,6 @@ public class TFTPRequestHandler {
 	}
 
 
-	public void run() {
-		try {
-			socket.setSoTimeout(50);
-		} catch (SocketException e) {
-			System.err.println("Socket timed out");
-			return;
-		}
-		while(running) {
-			assert requestPacket != null;
-
-			handleRequestPacket();
-
-			try {
-				socket.send(requestPacket);
-			} catch (IOException e) {
-				System.err.println("Error sending packet");
-			}
-			requestPacket = null;
-
-
-		}
-		socket.close();
-	}
-
 	private void handleRequestPacket() {
 		assert requestPacket.getData() != null;
 
