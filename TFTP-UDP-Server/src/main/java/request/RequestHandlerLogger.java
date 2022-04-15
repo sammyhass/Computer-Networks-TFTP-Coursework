@@ -8,7 +8,6 @@ public class RequestHandlerLogger {
 
     private final InetAddress clientAddress;
     private final int clientPort;
-    private String fileName;
 
     // Constructor
     public RequestHandlerLogger(InetAddress clientAddress, int clientPort) {
@@ -77,6 +76,12 @@ public class RequestHandlerLogger {
 
     public void logError(String errorMessage) {
         log(errorMessage, true);
+    }
+
+    public void logACK(int blockNumber, boolean didReceive) {
+        log(String.format(
+                "%s ACK Block %d", didReceive ? "Received" : "Sent", blockNumber
+        ));
     }
 
 }

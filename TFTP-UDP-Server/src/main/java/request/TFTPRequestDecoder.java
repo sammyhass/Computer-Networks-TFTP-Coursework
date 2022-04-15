@@ -126,7 +126,6 @@ public class TFTPRequestDecoder {
 			offset += 2;
 			// Block number
 			int block = unpackUint16(packet, offset);
-			System.out.println("Block number: " + block);
 
 			// Data
 			offset += 2;

@@ -23,7 +23,6 @@ public class DataPacketsBuilder {
 
 	public void setFilename(String filename) {
 		this.filename = filename;
-		System.out.println("Filename: " + filename);
 	}
 
 	public void setData(byte[] data) {
@@ -55,21 +54,21 @@ public class DataPacketsBuilder {
 	// Save the data packets to a file
 	public void save() throws IOException {
 
-		// Save the file into the resources folder of the project
-		// Get the resources folder
+		// Save the file into the root of the project.
 		String path = new java.io.File(".").getCanonicalPath() + '/' + filename;
 
 		// Create the file
 		File file = new File(path);
-
-		System.out.println("Saving file to: " + path);
 
 
 		FileOutputStream fos = new FileOutputStream(file);
 
 		fos.write(data, 0, size);
 
+
 		fos.flush();
+
+
 		reset();
 
 	}
