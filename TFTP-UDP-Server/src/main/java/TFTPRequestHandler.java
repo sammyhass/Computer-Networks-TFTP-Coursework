@@ -20,11 +20,6 @@ public class TFTPRequestHandler {
 	private  RequestHandlerLogger logger;
 	private final DatagramSocket socket;
 
-	public void stop() {
-		running = false;
-		System.out.println("Server thread stopped" + socket.getInetAddress());
-	}
-
 	public TFTPRequestHandler(DatagramSocket socket)  {
 		System.out.println("Server thread started");
 		this.socket = socket;
@@ -124,12 +119,10 @@ public class TFTPRequestHandler {
 			file = Files.readAllBytes(Paths.get(path));
 		} catch (IOException e) {
 			// If there was an error reading the file, send an error packet
-			System.err.println("Error reading file");
 			sendError(packet);
 			return;
 		}
 
-		// Wait for ACK
 		byte[] buffer = new byte[TFTPRequestBuilder.MAX_BYTES];
 
 		DatagramPacket ackPacket = new DatagramPacket(buffer, TFTPRequestBuilder.MAX_BYTES, packet.getAddress(), packet.getPort());
@@ -194,11 +187,11 @@ public class TFTPRequestHandler {
 	private void sendError(DatagramPacket packet) {
 
 		String msg = "File Not Found";
-		int code = 0x01;
+		int errorCode = 0b001;
 
 		// Create an error packet
 		byte[] buf = new byte[TFTPRequestBuilder.MAX_BYTES];
-		int size = TFTPRequestBuilder.packError(buf, code, msg);
+		int size = TFTPRequestBuilder.packError(buf, errorCode, msg);
 
 		// Send the error packet
 		DatagramPacket errorPacket = new DatagramPacket(buf, size, packet.getAddress(), packet.getPort());

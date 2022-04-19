@@ -55,11 +55,8 @@ public class TFTPRequestBuilder {
 		length += packString(buf, length, errorMessage);
 		buf[length++] = 0;
 
-
 		return length;
 	}
-
-
 
 
 	//  DATA packet
@@ -110,8 +107,6 @@ public class TFTPRequestBuilder {
 		buf[offset + 1] = (byte) (value);
 		return 2;
 	}
-
-
 
 
 	/*
