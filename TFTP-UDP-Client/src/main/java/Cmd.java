@@ -7,9 +7,9 @@ public class Cmd {
 
 
 	Scanner scanner;
-	Client client;
+	TFTPClient client;
 
-	public Cmd(Client client) {
+	public Cmd(TFTPClient client) {
 		this.client = client;
 		this.scanner = new Scanner(System.in);
 	}

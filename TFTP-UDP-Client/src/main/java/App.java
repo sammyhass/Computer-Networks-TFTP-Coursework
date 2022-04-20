@@ -1,7 +1,7 @@
 public class App {
 
 	public static void main(String[] args) {
-		Client client = new Client("localhost", 8888);
+		TFTPClient client = new TFTPClient("localhost", 8888);
 		Cmd cmd = new Cmd(client);
 		try {
 			cmd.run();
