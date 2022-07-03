@@ -17,10 +17,6 @@ public class DataPacketsBuilder {
 		data = new byte[MAX_BYTES_PER_FILE];
 	}
 
-
-
-
-
 	public void setFilename(String filename) {
 		this.filename = filename;
 	}
@@ -60,14 +56,13 @@ public class DataPacketsBuilder {
 		// Create the file
 		File file = new File(path);
 
-
 		FileOutputStream fos = new FileOutputStream(file);
 
 		fos.write(data, 0, size);
 
-
 		fos.flush();
 
+		fos.close();
 
 		reset();
 
@@ -79,11 +74,10 @@ public class DataPacketsBuilder {
 		data = new byte[MAX_BYTES_PER_FILE];
 	}
 
-
 	// Calculate the number of data packets needed to send the file given
 	// a packet size in bytes
 	public int getNumPackets(int packetSize) {
-		int ret =  (int) Math.ceil((double) size / packetSize);
+		int ret = (int) Math.ceil((double) size / packetSize);
 		return ret;
 
 	}
