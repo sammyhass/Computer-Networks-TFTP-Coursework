@@ -6,7 +6,7 @@ The task for this coursework was to implement the TFTP Protocol as defined in [R
 
 We were asked to implement both the client and server of the protocol and in additional we had to create a UDP version of the server and client as well as a TCP version of the server and client.
 
-This coursework was particularly interesting as it was a real world application of the protocol and it was a good opportunity to learn about the protocol and how it works, in addition it was fantastic to get some experience reading and implementing protocols from an RFC, something I had never done before.
+This coursework was particularly interesting as it was a great opportunity to learn about the protocol and how it works, in addition it was fantastic to get some experience reading and implementing protocols from an RFC, something I had never done before and gave me an chance to see how real world protocols are standardised using RFCs.
 
 For this coursework, my final mark was 94/100.
 
